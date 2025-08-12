@@ -35,6 +35,12 @@ python dictate.py
 ```
 Hold Right Option to speak; release to paste.
 
+### Options
+- Press Enter after paste: set `WILLOW_PRESS_ENTER=1`
+- Double‑tap toggle (hands‑free): set `WILLOW_DOUBLE_TAP=1` (default on)
+  - Double‑tap Right Option to toggle; single‑hold still works
+- Per‑app allow/deny: `WILLOW_ALLOW_APPS="Cursor,Notes,TextEdit"` or `WILLOW_DENY_APPS="1Password"`
+
 ## Customize
 Environment variables:
 ```bash
