@@ -14,6 +14,34 @@ import subprocess
 import re
 
 # -----------------------------
+# Config loading (.env)
+# -----------------------------
+
+def _load_env_from_file():
+    """Load simple KEY=VALUE pairs from a .env file in the script directory before reading env vars."""
+    try:
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        env_path = os.path.join(script_dir, ".env")
+        if not os.path.isfile(env_path):
+            return
+        with open(env_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                if "=" not in line:
+                    continue
+                key, val = line.split("=", 1)
+                key = key.strip()
+                val = val.strip().strip('"').strip("'")
+                if key and val and key not in os.environ:
+                    os.environ[key] = val
+    except Exception:
+        pass
+
+_load_env_from_file()
+
+# -----------------------------
 # Config
 # -----------------------------
 MODEL_SIZE = os.environ.get("WILLOW_LOCAL_MODEL", "small")  # tiny, base, small, medium, large-v3
@@ -32,6 +60,12 @@ DOUBLE_TAP_ENABLED = os.environ.get("WILLOW_DOUBLE_TAP", "1") != "0"
 DOUBLE_TAP_WINDOW = float(os.environ.get("WILLOW_DOUBLE_TAP_WINDOW", "0.35"))
 ALLOW_APPS = os.environ.get("WILLOW_ALLOW_APPS", "").strip()
 DENY_APPS = os.environ.get("WILLOW_DENY_APPS", "").strip()
+INPUT_DEVICE = os.environ.get("WILLOW_INPUT_DEVICE", "").strip()
+LOG_TRANSCRIPTS = os.environ.get("WILLOW_LOG_TRANSCRIPTS", "1") != "0"
+LOG_MAX_MB = float(os.environ.get("WILLOW_LOG_MAX_MB", "0"))  # 0 disables rotation
+PASTE_APPEND_NEWLINE = os.environ.get("WILLOW_PASTE_APPEND_NEWLINE", "0") == "1"
+PASTE_APPEND_SPACE = os.environ.get("WILLOW_PASTE_APPEND_SPACE", "0") == "1"
+TRIM_LEADING_SPACE = os.environ.get("WILLOW_TRIM_LEADING_SPACE", "0") == "1"
 
 # -----------------------------
 # Audio capture
@@ -197,6 +231,12 @@ def play_sound(path: str):
 def paste_text_into_front_app(text: str):
     if not text:
         return
+    if TRIM_LEADING_SPACE:
+        text = text.lstrip()
+    if PASTE_APPEND_SPACE and not text.endswith(" "):
+        text = text + " "
+    if PASTE_APPEND_NEWLINE and not text.endswith("\n"):
+        text = text + "\n"
     # Use pbcopy for reliability across macOS versions
     try:
         p = subprocess.Popen(['pbcopy'], stdin=subprocess.PIPE)
@@ -256,10 +296,39 @@ def _is_front_app_allowed() -> bool:
 
 
 # -----------------------------
+# Logging utilities
+# -----------------------------
+
+def _rotate_main_log_if_needed():
+    if LOG_MAX_MB <= 0:
+        return
+    try:
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        log_path = os.path.join(script_dir, "dictate.log")
+        if not os.path.isfile(log_path):
+            return
+        size = os.path.getsize(log_path)
+        if size >= int(LOG_MAX_MB * 1024 * 1024):
+            bak_path = log_path + ".1"
+            try:
+                if os.path.isfile(bak_path):
+                    os.remove(bak_path)
+            except Exception:
+                pass
+            os.replace(log_path, bak_path)
+    except Exception:
+        pass
+
+
+# -----------------------------
 # Main loop
 # -----------------------------
 
 def main():
+    # Prepare audio stream
+    # Optional log rotation at start
+    _rotate_main_log_if_needed()
+
     # Prepare audio stream
     stream = sd.InputStream(
         samplerate=SAMPLE_RATE,
@@ -267,7 +336,7 @@ def main():
         dtype='float32',
         callback=audio_callback,
         blocksize=0,
-        device=None  # default input device
+        device=INPUT_DEVICE if INPUT_DEVICE else None  # default input device or user-specified
     )
 
     model = load_model()

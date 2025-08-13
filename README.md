@@ -46,8 +46,16 @@ Environment variables:
 ```bash
 export WILLOW_LOCAL_MODEL=small       # tiny, base, small, medium, large-v3
 export WILLOW_LOCAL_LANG=en           # None for auto
-export WILLOW_LOCAL_DEVICE=auto       # auto/cpu/cuda/metal
+export WILLOW_LOCAL_DEVICE=auto       # auto/cpu/cuda
 export WILLOW_LOCAL_PRECISION=int8    # float16/float32/int8
+# Priority 2
+export WILLOW_INPUT_DEVICE=""        # device name or index; empty=default
+export WILLOW_LOG_TRANSCRIPTS=1       # 0 to hide transcript text from logs
+export WILLOW_LOG_MAX_MB=2            # rotate log when size >= 2MB; 0 disables
+# Priority 3
+export WILLOW_PASTE_APPEND_NEWLINE=0  # 1 to add newline after paste
+export WILLOW_PASTE_APPEND_SPACE=0    # 1 to add space after paste
+export WILLOW_TRIM_LEADING_SPACE=0    # 1 to trim leading spaces
 ```
 
 Change hotkey: edit `HOLD_KEY` in `dictate.py` (e.g., `keyboard.Key.shift`, or a specific character key via `keyboard.KeyCode.from_char('`')).
@@ -56,6 +64,20 @@ Change hotkey: edit `HOLD_KEY` in `dictate.py` (e.g., `keyboard.Key.shift`, or a
 - If paste doesn’t work, ensure your terminal app is allowed under Accessibility.
 - If audio is noisy, switch to Built-in Microphone (System Settings → Sound → Input).
 - If latency is high, try a smaller model (e.g., `base` or `small`).
+
+## .env file (optional)
+Create a `.env` alongside `dictate.py` to persist settings across logins, for example:
+```
+WILLOW_PRESS_ENTER=1
+WILLOW_DOUBLE_TAP=1
+WILLOW_ALLOW_APPS=Cursor,Notes,TextEdit
+WILLOW_LOCAL_MODEL=small
+WILLOW_LOCAL_PRECISION=int8
+WILLOW_INPUT_DEVICE=
+WILLOW_LOG_TRANSCRIPTS=1
+WILLOW_LOG_MAX_MB=2
+WILLOW_PASTE_APPEND_NEWLINE=0
+```
 
 ## Notes
 - Everything runs locally; no network required after model download.
