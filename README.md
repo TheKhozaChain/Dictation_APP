@@ -15,7 +15,8 @@ A tiny, offline, push-to-talk dictation tool for macOS using faster-whisper. Hol
 
 ## Install
 ```bash
-cd /Users/siphokhoza/willow_competitor
+git clone https://github.com/TheKhozaChain/Dictation_APP.git
+cd Dictation_APP
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip wheel setuptools
@@ -64,6 +65,14 @@ Change hotkey: edit `HOLD_KEY` in `dictate.py` (e.g., `keyboard.Key.shift`, or a
 - If paste doesn’t work, ensure your terminal app is allowed under Accessibility.
 - If audio is noisy, switch to Built-in Microphone (System Settings → Sound → Input).
 - If latency is high, try a smaller model (e.g., `base` or `small`).
+
+## Menu bar app (optional)
+We include a lightweight menu bar controller that manages the background service:
+```bash
+pip install -r requirements.txt  # ensures rumps is installed
+python menubar.py
+```
+It shows a mic icon (🎤 when running, ❌ when stopped) with options: Start, Stop, Restart, Open Log, Quit. No logins.
 
 ## .env file (optional)
 Create a `.env` alongside `dictate.py` to persist settings across logins, for example:
