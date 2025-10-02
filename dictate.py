@@ -359,6 +359,7 @@ def main():
                     break
             recording_flag.set()
             pressed_time = time.time()
+            print("[dictate] Start recording")
             play_sound(SOUND_START)
 
         def _stop_and_transcribe():
@@ -366,6 +367,7 @@ def main():
             recording_flag.clear()
             duration = time.time() - pressed_time
             if duration < MIN_SPEECH_SECS:
+                print(f"[dictate] Ignored short press: {duration:.2f}s < {MIN_SPEECH_SECS}s")
                 return
             chunks = []
             while not audio_q.empty():
@@ -375,6 +377,7 @@ def main():
                 except queue.Empty:
                     break
             if not chunks:
+                print("[dictate] No audio chunks captured")
                 return
             audio = np.concatenate(chunks, axis=0)
             if audio.ndim == 2:
@@ -388,6 +391,7 @@ def main():
                 print(f"Captured {audio_seconds:.2f}s (<0.8s). Skipping.")
                 return
             play_sound(SOUND_STOP)
+            print("[dictate] Stop recording → transcribe")
             print("Transcribing...")
             try:
                 raw_text = transcribe_buffer(model, audio)
@@ -401,11 +405,13 @@ def main():
         def on_press(key):
             nonlocal pressed_time, last_tap_time, latched_on
             if key == HOLD_KEY:
+                print("[dictate] Hold key pressed")
                 now = time.time()
                 if DOUBLE_TAP_ENABLED and (now - last_tap_time) <= DOUBLE_TAP_WINDOW:
                     # toggle latch
                     last_tap_time = 0.0
                     latched_on = not latched_on
+                    print(f"[dictate] Latch {'ON' if latched_on else 'OFF'}")
                     if latched_on and not recording_flag.is_set():
                         _start_recording()
                     elif not latched_on and recording_flag.is_set():
@@ -419,6 +425,7 @@ def main():
         def on_release(key):
             nonlocal latched_on
             if key == HOLD_KEY and recording_flag.is_set():
+                print("[dictate] Hold key released")
                 if latched_on:
                     # In latched mode, release does nothing
                     return

@@ -37,7 +37,6 @@ class DictateMenu(rumps.App):
             rumps.MenuItem("Quit", callback=self.quit_app),
         ]
         self.icon = None
-        rumps.notifications._clear()
         rumps.Timer(self.refresh_title, 2).start()
 
     def refresh_title(self, _=None):
